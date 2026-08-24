@@ -9,6 +9,11 @@ app = Flask(__name__)
 def index():
    return render_template('login.html', title='Welcome back')
 
+@app.route('/dashboard')
+def dashboard():
+   return render_template('dashboard.html', title='Dashboard')
+
+
 @app.route('/forgot-password')
 def forgot_password():
    pass
