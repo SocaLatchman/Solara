@@ -9,7 +9,9 @@ app = Flask(__name__)
 def index():
    return render_template('login.html', title='Welcome back')
 
-
+@app.route('/forgot-password')
+def forgot_password():
+   pass
 
 if __name__ == '__main__':
    app.run(debug=True)
