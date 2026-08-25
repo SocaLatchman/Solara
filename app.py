@@ -1,9 +1,9 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 from dotenv import load_dotenv
 import os
-
 
 class Base(DeclarativeBase):
    def save(self):
@@ -17,8 +17,9 @@ class Base(DeclarativeBase):
 load_dotenv('.env')
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 db = SQLAlchemy(app, model_class=Base)
-
+csrf = CSRFProtect(app)
 
 
 
