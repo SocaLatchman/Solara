@@ -1,4 +1,44 @@
 {% extends 'base.html' %}
 {% include 'header.html' %}
 {% block content %}
+<div id="dashboard">
+   <div class="card">
+      <div class="left-content">
+        <header>
+          <h3>Desert Valley Solar Center</h3>
+          <p>Moreno Valley, CA</p>
+        </header>
+        <div class="model-details">
+           <h4>Maxeon 6 Commercial</h4>
+           <div class="model-detail-flex">
+             <div>Current Output / Peak Daily Range (kW)</div>
+             <div>50 panels</div>
+           </div>
+           <div class="status-indicator">
+              <svg id="status-bar-gradient" class="gradient-bar" viewBox="0 0 500 45" preserveAspectRatio="xMidYMid meet"></svg>
+              <div class="status-label-container">
+                <div>0 kW (min)</div>
+                <div class="live-value"><span class="kw-value">0.0</span> kW (current)</div>
+                <div>200 kW (max)</div>
+              </div>
+              <div class="kWh-total-container">
+                <div><img src="{{ url_for('static', filename='images/sunny.svg')}}" class="weather-status"></div>
+                <div><span class="kWh">420</span> kWh Generated Today</div> 
+              </div>
+           </div>
+        </div>
+      </div>
+      <div class="right-content">
+        <div class="efficiency-dial-card">
+            <svg id="energy-dial" width="100%" height="215px" viewBox="0 0 400 306"></svg>
+            <div class="efficiency-metrics">
+                <div class="efficiency-percentage">
+                    <span class="percentage">0%</span>
+                    <span>Efficiency</span>
+                </div>
+            </div>
+        </div>
+      </div>
+   </div>   
+</div>
 {% endblock %}

@@ -4,12 +4,13 @@
         <meta charset="UTF-8">
         <title>Solara | {% block title %}{{ title }}{% endblock %}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
         <link href="{{ url_for('static', filename='css/styles.css')}}" rel="stylesheet">
-        <script src="{{ url_for('static', filename='js/main.js')}}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.js" integrity="sha512-iiZOijMkLFQSa43AyuzD6p176GJlnhWXEv7loEZFkCDpFQvZCijZLE6U8IRpAIb53KagIIwhSwHWTgsDlci/jw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     </head>
     <body>
         {% block content %}{% endblock %}
+        <script src="{{ url_for('static', filename='js/main.js')}}"></script>
     </body>
 </html>

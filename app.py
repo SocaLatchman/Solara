@@ -13,7 +13,6 @@ def index():
 def dashboard():
    return render_template('dashboard.html', title='Dashboard')
 
-
 @app.route('/forgot-password')
 def forgot_password():
    pass
