@@ -95,7 +95,6 @@ class SolarFarmSchema(SQLAlchemyAutoSchema):
       load_instance = True
    solar_panels = fields.Nested(SolarArraySchema, many=True)
 
-
 class HistorySchema(SQLAlchemyAutoSchema):
    class Meta:
       model = History
@@ -108,6 +107,28 @@ class StaffSchema(SQLAlchemyAutoSchema):
       sql_session = db.session
       load_instance = True
    jobs = fields.Nested(HistorySchema, many=True)
+
+class PowerUsageResults:
+   #get the current, high and low kW generated for the day
+   def kW_calculator():
+      pass
+
+   def find_daily_low():
+      pass
+
+   def find_daily_high():
+      pass
+
+   def current_Kw(self):
+      #get the most recent row inserted for a given solar array
+      pass
+
+   def date_formatter(self, log_date):
+      result_date = datetime.fromisoformat(log_date)
+      return result_date.strftime('%d-%m-%Y %I:%M %p %Z')
+
+ 
+
 
 
 @app.route('/')
@@ -127,7 +148,30 @@ def dashboard():
    solar_farms = db.session.scalars(solar_stmt).all()
    solar_schema = SolarFarmSchema(many=True)
    solar_farms_result = solar_schema.dump(solar_farms)
-   print(solar_farms_result)
+   power_usage_results = PowerUsageResults()
+   solar_farm_stats = []
+   for farm in solar_farms_result:
+      for solar_panel in farm['solar_panels']:
+         farms = {}
+         farms.update(
+           {
+            'name' : farm['name'],
+            'power_usage' : solar_panel['power_usage'],
+            'model' : solar_panel['panel_model'],
+            'total_panels' : solar_panel['total_panels'],
+            'kWh' : solar_panel['panel_kw_rating'],
+            'status' : solar_panel['status'],
+            'log_date' : power_usage_results.date_formatter([
+                logged_date['logged_at'] for logged_date in solar_panel['power_usage']][0]
+            )
+            # 'current_kw' : ,
+            # 'daily_low' : ,
+            # 'daily: high' : ,
+           }
+         ) 
+         solar_farm_stats.append(farms)
+
+   print(solar_farm_stats)
    return render_template('dashboard.html', solar_farms=solar_farms_result)
          
 @app.route('/forgot-password')
