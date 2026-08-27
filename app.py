@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy import ForeignKey, select
+from sqlalchemy import ForeignKey, select, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, joinedload, selectinload
 from marshmallow import fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema 
@@ -59,15 +59,15 @@ class SolarArray(db.Model):
    status: Mapped[str] = mapped_column(nullable=False)
    farm_id: Mapped[int] = mapped_column(ForeignKey('solar_farm.farm_id'), nullable=False)
    farm: Mapped['SolarFarm'] = relationship(back_populates='solar_panels')
-   power_usage: Mapped[List['PowerUsage']] = relationship(back_populates='solar_array_power', cascade='all, delete-orphan')
+   power_log: Mapped[List['PowerLog']] = relationship(back_populates='solar_array_power', cascade='all, delete-orphan')
 
-class PowerUsage(db.Model):
-   __tablename__ = 'power_usage_log'
+class PowerLog(db.Model):
+   __tablename__ = 'power_log'
    usage_id: Mapped[int] = mapped_column(primary_key=True)
    kw_generated: Mapped[float] = mapped_column(nullable=False)
    logged_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
    solar_array_id: Mapped[int] = mapped_column(ForeignKey('solar_array.solar_array_id'), nullable=False)
-   solar_array_power: Mapped['SolarArray'] = relationship(back_populates='power_usage')
+   solar_array_power: Mapped['SolarArray'] = relationship(back_populates='power_log')
 
 class History(db.Model):
    __tablename__ = 'history'
@@ -78,16 +78,16 @@ class History(db.Model):
    panel_maintenance: Mapped['Staff'] = relationship(back_populates='jobs')
 
 
-class PowerUsageSchema(SQLAlchemyAutoSchema):
+class PowerLogSchema(SQLAlchemyAutoSchema):
    class Meta:
-      model = PowerUsage
+      model = PowerLog
       load_instance = True
 
 class SolarArraySchema(SQLAlchemyAutoSchema):
    class Meta:
       model = SolarArray
       load_instance = True
-   power_usage = fields.Nested(PowerUsageSchema, many=True)
+   power_log = fields.Nested(PowerLogSchema, many=True)
 
 class SolarFarmSchema(SQLAlchemyAutoSchema):
    class Meta:
@@ -108,28 +108,28 @@ class StaffSchema(SQLAlchemyAutoSchema):
       load_instance = True
    jobs = fields.Nested(HistorySchema, many=True)
 
-class PowerUsageResults:
+class PowerLogResults:
    #get the current, high and low kW generated for the day
-   def kW_calculator():
-      pass
-
-   def find_daily_low():
-      pass
-
-   def find_daily_high():
-      pass
-
-   def current_Kw(self):
-      #get the most recent row inserted for a given solar array
-      pass
+   def kW_calculator(self, daily_kW_measurement, sa_id):
+      result = 0.0
+      if daily_kW_measurement == 'CURRENT':
+         stmt = select(PowerLog.kw_generated)\
+               .where(PowerLog.solar_array_id == sa_id)\
+               .order_by(PowerLog.logged_at.desc())
+         result = db.session.scalar(stmt)
+      elif daily_kW_measurement == 'HIGH':
+         stmt = select(func.max(PowerLog.kw_generated))\
+            .where(PowerLog.solar_array_id == sa_id)
+         result = db.session.scalar(stmt)
+      elif daily_kW_measurement == 'LOW':
+         stmt = select(func.min(PowerLog.kw_generated))\
+            .where(PowerLog.solar_array_id == sa_id)
+         result = db.session.scalar(stmt)
+      return result
 
    def date_formatter(self, log_date):
       result_date = datetime.fromisoformat(log_date)
-      return result_date.strftime('%d-%m-%Y %I:%M %p %Z')
-
- 
-
-
+      return result_date.strftime('%m-%d-%Y %I:%M %p')
 
 @app.route('/')
 @app.route('/login')
@@ -142,13 +142,13 @@ def dashboard():
          select(SolarFarm)
         .options(
            selectinload(SolarFarm.solar_panels)
-           .selectinload(SolarArray.power_usage)
+           .selectinload(SolarArray.power_log)
          )
    )
    solar_farms = db.session.scalars(solar_stmt).all()
    solar_schema = SolarFarmSchema(many=True)
    solar_farms_result = solar_schema.dump(solar_farms)
-   power_usage_results = PowerUsageResults()
+   power_log_results = PowerLogResults()
    solar_farm_stats = []
    for farm in solar_farms_result:
       for solar_panel in farm['solar_panels']:
@@ -156,22 +156,20 @@ def dashboard():
          farms.update(
            {
             'name' : farm['name'],
-            'power_usage' : solar_panel['power_usage'],
+            'power_log' : solar_panel['power_log'],
             'model' : solar_panel['panel_model'],
             'total_panels' : solar_panel['total_panels'],
             'kWh' : solar_panel['panel_kw_rating'],
             'status' : solar_panel['status'],
-            'log_date' : power_usage_results.date_formatter([
-                logged_date['logged_at'] for logged_date in solar_panel['power_usage']][0]
-            )
-            # 'current_kw' : ,
-            # 'daily_low' : ,
-            # 'daily: high' : ,
+            'log_date' : power_log_results.date_formatter([
+                logged_date['logged_at'] for logged_date in solar_panel['power_log']][0]
+            ),
+            'current_kw' : power_log_results.kW_calculator('CURRENT', solar_panel['solar_array_id']),
+            'daily_low' : power_log_results.kW_calculator('LOW', solar_panel['solar_array_id']),
+            'daily_high' : power_log_results.kW_calculator('HIGH', solar_panel['solar_array_id']),
            }
          ) 
          solar_farm_stats.append(farms)
-
-   print(solar_farm_stats)
    return render_template('dashboard.html', solar_farms=solar_farms_result)
          
 @app.route('/forgot-password')
