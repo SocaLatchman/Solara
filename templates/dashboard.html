@@ -2,30 +2,29 @@
 {% include 'header.html' %}
 {% block content %}
 <div id="dashboard">
-   {% for farm in solar_farms %}
-     {% for solar_panel in farm.solar_panels %}   
+   {% for solar_farm in solar_farms %} 
    <div class="card">
       <div class="left-content">
         <header>
-          <h3>{{ farm.name }}</h3>
-          <p>{{ farm.location}}</p>
+          <h3>{{ solar_farm.name }}</h3>
+          <p>{{ solar_farm.location}}</p>
         </header>
         <div class="model-details">
-           <h4>{{ solar_panel.panel_model }}</h4>
+           <h4>{{ solar_farm.model }}</h4>
            <div class="model-detail-flex">
              <div>Current Output / Peak Daily Range (kW)</div>
-             <div>50 panels</div>
+             <div>{{ solar_farm.total_panels }} panels</div>
            </div>
            <div class="status-indicator">
               <svg id="status-bar-gradient" class="gradient-bar" viewBox="0 0 500 45" preserveAspectRatio="xMidYMid meet"></svg>
               <div class="status-label-container">
-                <div>0 kW (min)</div>
-                <div class="live-value"><span class="kw-value">0.0</span> kW (current)</div>
-                <div>200 kW (max)</div>
+                <div>{{ solar_farm.daily_low }} kW (min)</div>
+                <div class="live-value"><span class="kw-value">{{ solar_farm.current_kw }}</span> kW (current)</div>
+                <div>{{ solar_farm.daily_high }} kW (max)</div>
               </div>
               <div class="kWh-total-container">
                 <div><img src="{{ url_for('static', filename='images/sunny.svg')}}" class="weather-status"></div>
-                <div><span class="kWh">420</span> kWh Generated Today</div> 
+                <div><span class="kWh">{{ solar_farm.kWh }}</span> kWh Generated Today</div> 
               </div>
               
            </div>
@@ -43,7 +42,6 @@
         </div>
       </div>
    </div> 
-   {% endfor %}
 {% endfor %}
 </div>
 {% endblock %}

@@ -32,7 +32,6 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 db = SQLAlchemy(app, model_class=Base)
 csrf = CSRFProtect(app)
 
-
 class Staff(db.Model):
    __tablename__ = 'staff'
    user_id: Mapped[int] = mapped_column(primary_key=True)
@@ -109,23 +108,32 @@ class StaffSchema(SQLAlchemyAutoSchema):
    jobs = fields.Nested(HistorySchema, many=True)
 
 class PowerLogResults:
-   #get the current, high and low kW generated for the day
+   #get the current, high and low kW generated
    def kW_calculator(self, daily_kW_measurement, sa_id):
-      result = 0.0
       if daily_kW_measurement == 'CURRENT':
-         stmt = select(PowerLog.kw_generated)\
-               .where(PowerLog.solar_array_id == sa_id)\
-               .order_by(PowerLog.logged_at.desc())
-         result = db.session.scalar(stmt)
+          stmt = self._current_kW(sa_id)
       elif daily_kW_measurement == 'HIGH':
-         stmt = select(func.max(PowerLog.kw_generated))\
-            .where(PowerLog.solar_array_id == sa_id)
-         result = db.session.scalar(stmt)
+          stmt = self._daily_kW_high(sa_id)
       elif daily_kW_measurement == 'LOW':
-         stmt = select(func.min(PowerLog.kw_generated))\
+          stmt = self._daily_kW_low(sa_id)
+      return db.session.scalar(stmt) or 0.0
+
+   @classmethod
+   def _current_kW(cls, sa_id):
+      return select(PowerLog.kw_generated)\
+             .where(PowerLog.solar_array_id == sa_id)\
+             .order_by(PowerLog.logged_at.desc())\
+             .limit(1)
+         
+   @classmethod
+   def _daily_kW_high(cls, sa_id):
+      return select(func.max(PowerLog.kw_generated))\
             .where(PowerLog.solar_array_id == sa_id)
-         result = db.session.scalar(stmt)
-      return result
+             
+   @classmethod
+   def _daily_kW_low(cls, sa_id):
+      return select(func.min(PowerLog.kw_generated))\
+            .where(PowerLog.solar_array_id == sa_id)
 
    def date_formatter(self, log_date):
       result_date = datetime.fromisoformat(log_date)
@@ -170,7 +178,7 @@ def dashboard():
            }
          ) 
          solar_farm_stats.append(farms)
-   return render_template('dashboard.html', solar_farms=solar_farms_result)
+   return render_template('dashboard.html', solar_farms=solar_farm_stats)
          
 @app.route('/forgot-password')
 def forgot_password():
