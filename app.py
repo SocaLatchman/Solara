@@ -78,10 +78,16 @@ class History(db.Model):
    panel_maintenance: Mapped['Staff'] = relationship(back_populates='jobs')
 
 
+class PowerUsageSchema(SQLAlchemyAutoSchema):
+   class Meta:
+      model = PowerUsage
+      load_instance = True
+
 class SolarArraySchema(SQLAlchemyAutoSchema):
    class Meta:
       model = SolarArray
       load_instance = True
+   power_usage = fields.Nested(PowerUsageSchema, many=True)
 
 class SolarFarmSchema(SQLAlchemyAutoSchema):
    class Meta:
@@ -89,11 +95,6 @@ class SolarFarmSchema(SQLAlchemyAutoSchema):
       load_instance = True
    solar_panels = fields.Nested(SolarArraySchema, many=True)
 
-class PowerUsageSchema(SQLAlchemyAutoSchema):
-   class Meta:
-      model = PowerUsage
-      load_instance = True
-   solar_array_power = fields.Nested(SolarArraySchema)
 
 class HistorySchema(SQLAlchemyAutoSchema):
    class Meta:
@@ -126,7 +127,8 @@ def dashboard():
    solar_farms = db.session.scalars(solar_stmt).all()
    solar_schema = SolarFarmSchema(many=True)
    solar_farms_result = solar_schema.dump(solar_farms)
-   return render_template('dashboard.html', solar_farms=jsonify(solar_farms_result))
+   print(solar_farms_result)
+   return render_template('dashboard.html', solar_farms=solar_farms_result)
          
 @app.route('/forgot-password')
 def forgot_password():

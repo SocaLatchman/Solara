@@ -2,14 +2,16 @@
 {% include 'header.html' %}
 {% block content %}
 <div id="dashboard">
+   {% for farm in solar_farms %}
+     {% for solar_panel in farm.solar_panels %}   
    <div class="card">
       <div class="left-content">
         <header>
-          <h3>Desert Valley Solar Center</h3>
-          <p>Moreno Valley, CA</p>
+          <h3>{{ farm.name }}</h3>
+          <p>{{ farm.location}}</p>
         </header>
         <div class="model-details">
-           <h4>Maxeon 6 Commercial</h4>
+           <h4>{{ solar_panel.panel_model }}</h4>
            <div class="model-detail-flex">
              <div>Current Output / Peak Daily Range (kW)</div>
              <div>50 panels</div>
@@ -25,6 +27,7 @@
                 <div><img src="{{ url_for('static', filename='images/sunny.svg')}}" class="weather-status"></div>
                 <div><span class="kWh">420</span> kWh Generated Today</div> 
               </div>
+              
            </div>
         </div>
       </div>
@@ -39,6 +42,8 @@
             </div>
         </div>
       </div>
-   </div>   
+   </div> 
+   {% endfor %}
+{% endfor %}
 </div>
 {% endblock %}
