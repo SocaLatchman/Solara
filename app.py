@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship,
 from marshmallow import fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema 
 from dotenv import load_dotenv
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from typing import List
 import os
 
@@ -108,7 +108,7 @@ class StaffSchema(SQLAlchemyAutoSchema):
    jobs = fields.Nested(HistorySchema, many=True)
 
 class PowerLogResults:
-   #get the current, high and low kW generated
+   #get the current, high and low kW generated for the day
    def kW_calculator(self, daily_kW_measurement, sa_id):
       if daily_kW_measurement == 'CURRENT':
           stmt = self._current_kW(sa_id)
@@ -116,6 +116,8 @@ class PowerLogResults:
           stmt = self._daily_kW_high(sa_id)
       elif daily_kW_measurement == 'LOW':
           stmt = self._daily_kW_low(sa_id)
+      elif daily_kW_measurement == 'kWh':
+          stmt = self._daily_kWh(sa_id)
       return db.session.scalar(stmt) or 0.0
 
    @classmethod
@@ -128,13 +130,21 @@ class PowerLogResults:
    @classmethod
    def _daily_kW_high(cls, sa_id):
       return select(func.max(PowerLog.kw_generated))\
-            .where(PowerLog.solar_array_id == sa_id)
+            .where(PowerLog.solar_array_id == sa_id)\
+            .where(func.date(PowerLog.logged_at) == date.today())
              
    @classmethod
    def _daily_kW_low(cls, sa_id):
       return select(func.min(PowerLog.kw_generated))\
-            .where(PowerLog.solar_array_id == sa_id)
+            .where(PowerLog.solar_array_id == sa_id)\
+            .where(func.date(PowerLog.logged_at) == date.today())
 
+   @classmethod
+   def _daily_kWh(cls, sa_id):  
+      return select(func.sum(PowerLog.kw_generated))\
+           .where(PowerLog.solar_array_id == sa_id)\
+           .where(func.date(PowerLog.logged_at) == date.today())
+            
    def date_formatter(self, log_date):
       result_date = datetime.fromisoformat(log_date)
       return result_date.strftime('%m-%d-%Y %I:%M %p')
@@ -167,7 +177,7 @@ def dashboard():
             'power_log' : solar_panel['power_log'],
             'model' : solar_panel['panel_model'],
             'total_panels' : solar_panel['total_panels'],
-            'kWh' : solar_panel['panel_kw_rating'],
+            'kWh' : power_log_results.kW_calculator('kWh', solar_panel['solar_array_id']),
             'status' : solar_panel['status'],
             'log_date' : power_log_results.date_formatter([
                 logged_date['logged_at'] for logged_date in solar_panel['power_log']][0]
