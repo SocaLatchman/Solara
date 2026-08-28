@@ -144,6 +144,13 @@ class PowerLogResults:
       return select(func.sum(PowerLog.kw_generated))\
            .where(PowerLog.solar_array_id == sa_id)\
            .where(func.date(PowerLog.logged_at) == date.today())
+
+   def efficiency_percentage(self, current_kW_generated, total_panels, panel_kw_rating):
+       max_capacity = total_panels * panel_kw_rating 
+       return int((current_kW_generated / max_capacity) * 100)
+
+
+             
             
    def date_formatter(self, log_date):
       result_date = datetime.fromisoformat(log_date)
@@ -176,6 +183,7 @@ def dashboard():
             'name' : farm['name'],
             'power_log' : solar_panel['power_log'],
             'model' : solar_panel['panel_model'],
+            'location' :  farm['location'],
             'total_panels' : solar_panel['total_panels'],
             'kWh' : power_log_results.kW_calculator('kWh', solar_panel['solar_array_id']),
             'status' : solar_panel['status'],
@@ -185,9 +193,15 @@ def dashboard():
             'current_kw' : power_log_results.kW_calculator('CURRENT', solar_panel['solar_array_id']),
             'daily_low' : power_log_results.kW_calculator('LOW', solar_panel['solar_array_id']),
             'daily_high' : power_log_results.kW_calculator('HIGH', solar_panel['solar_array_id']),
+            'efficiency' : power_log_results.efficiency_percentage(
+               power_log_results.kW_calculator('CURRENT', solar_panel['solar_array_id']),
+               solar_panel['total_panels'], 
+               solar_panel['panel_kw_rating']
+             ) 
            }
          ) 
          solar_farm_stats.append(farms)
+         print(solar_farm_stats)
    return render_template('dashboard.html', solar_farms=solar_farm_stats)
          
 @app.route('/forgot-password')
