@@ -16,7 +16,7 @@
              <div>{{ solar_farm.total_panels }} panels</div>
            </div>
            <div class="status-indicator">
-              <svg id="status-bar-gradient" class="gradient-bar" viewBox="0 0 500 45" preserveAspectRatio="xMidYMid meet"></svg>
+              <div class="energy-bar-container"></div> 
               <div class="status-label-container">
                 <div><span class="low">{{ solar_farm.daily_low }}</span> kW (min)</div>
                 <div class="live-value"><span class="current">{{ solar_farm.current_kw }}</span> kW (current)</div>
@@ -35,7 +35,7 @@
             <svg class="energy-dial" width="100%" height="215px" viewBox="0 0 400 306"></svg>
             <div class="efficiency-metrics">
                 <div class="efficiency-percentage">
-                    <span class="percentage">{{ solar_farm.efficiency }}%</span>
+                    <span class="percentage">{{ solar_farm.efficiency }}</span>%
                     <span>Efficiency</span>
                 </div>
             </div>

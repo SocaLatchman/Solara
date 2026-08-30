@@ -131,19 +131,19 @@ class PowerLogResults:
    def _daily_kW_high(cls, sa_id):
       return select(func.max(PowerLog.kw_generated))\
             .where(PowerLog.solar_array_id == sa_id)\
-            .where(func.date(PowerLog.logged_at) == date.today() - timedelta(days=1))
+            .where(func.date(PowerLog.logged_at) == date.today() - timedelta(days=2))
              
    @classmethod
    def _daily_kW_low(cls, sa_id):
       return select(func.min(PowerLog.kw_generated))\
             .where(PowerLog.solar_array_id == sa_id)\
-            .where(func.date(PowerLog.logged_at) == date.today() - timedelta(days=1))
+            .where(func.date(PowerLog.logged_at) == date.today() - timedelta(days=2))
 
    @classmethod
    def _daily_kWh(cls, sa_id):  
       return select(func.sum(PowerLog.kw_generated))\
            .where(PowerLog.solar_array_id == sa_id)\
-           .where(func.date(PowerLog.logged_at) == date.today() - timedelta(days=1))
+           .where(func.date(PowerLog.logged_at) == date.today() - timedelta(days=2))
 
    def efficiency_percentage(self, current_kW_generated, total_panels, panel_kw_rating):
        max_capacity = total_panels * panel_kw_rating 
